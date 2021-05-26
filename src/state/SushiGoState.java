@@ -21,7 +21,27 @@ public class SushiGoState implements GameState {
 	private int currentPlayer;
 	private int currentRound;
 
-	public SushiGoState(final int numPlayers, final int aiPlayer, final Scanner in) {
+	/**
+	 * @param numPlayers
+	 *            The number of players, should be 2-5
+	 * @param aiPlayer
+	 *            Which player is the AI, should be 0-[numPlayers-1]
+	 * @param in
+	 *            The scanner the game should use to read in the cards that the AI
+	 *            receives
+	 * @throws IllegalArgumentException
+	 *             If numPlayers or aiPlayer is not in the correct range
+	 */
+	public SushiGoState(final int numPlayers, final int aiPlayer, final Scanner in) throws IllegalArgumentException {
+		if (numPlayers < 2 || numPlayers > 5) {
+			throw new IllegalArgumentException("Tried to start a game with " + numPlayers + " players (2-5 required)");
+		}
+
+		if (aiPlayer < 0 || aiPlayer >= numPlayers) {
+			throw new IllegalArgumentException("Tried to make the AI player " + aiPlayer + " in a " + numPlayers
+					+ "-player game (0-" + (numPlayers - 1) + " required)");
+		}
+
 		this.players = new Player[numPlayers];
 		this.deck = new Deck();
 		this.aiPlayer = aiPlayer;
