@@ -15,20 +15,22 @@ public class SushiGoState implements GameState {
 
 	private final Player[] players;
 	private final Deck deck;
+	private final int aiPlayer;
 
 	private int lastPlayer;
 	private int currentPlayer;
 	private int currentRound;
 
-	public SushiGoState(final int numPlayers, final Scanner in) {
+	public SushiGoState(final int numPlayers, final int aiPlayer, final Scanner in) {
 		this.players = new Player[numPlayers];
 		this.deck = new Deck();
+		this.aiPlayer = aiPlayer;
 
 		this.lastPlayer = -1;
 		this.currentPlayer = 0;
 		this.currentRound = 1;
 
-		this.deal(in);
+		this.dealFromInput(in);
 	}
 
 	/**
@@ -36,14 +38,18 @@ public class SushiGoState implements GameState {
 	 * 
 	 * @param cardPlayed
 	 *            The card to play
+	 * @param dealRandomly
+	 *            Whether or not the deck should be dealt randomly in the event of a
+	 *            deal occurring after the end of the round
 	 * @param in
 	 *            The Scanner that this method should use to obtain which cards the
 	 *            AI drew in the event of a deal occurring after the end of the
-	 *            round
+	 *            round (this value doesn't matter if dealRandomly is true
 	 * @throws IllegalArgumentException
 	 *             If the provided card does not match any of the valid cards
 	 */
-	public void makeMove(final String cardPlayed, final Scanner in) throws IllegalArgumentException {
+	public void makeMove(final String cardPlayed, final boolean dealRandomly, final Scanner in)
+			throws IllegalArgumentException {
 
 	}
 
@@ -55,7 +61,14 @@ public class SushiGoState implements GameState {
 	 *            The Scanner that this method should use to obtain which cards the
 	 *            AI drew
 	 */
-	private void deal(final Scanner in) {
+	private void dealFromInput(final Scanner in) {
+
+	}
+
+	/**
+	 * This method deals the cards to the players randomly (used for simulation).
+	 */
+	private void dealRandomly() {
 
 	}
 
