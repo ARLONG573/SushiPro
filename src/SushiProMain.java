@@ -14,7 +14,6 @@ public class SushiProMain {
 		final Scanner in = new Scanner(System.in);
 
 		int numPlayers = 0;
-		int aiPlayer = -1;
 		SushiGoState state = null;
 		boolean tryAgain = true;
 
@@ -31,28 +30,26 @@ public class SushiProMain {
 				continue;
 			}
 
-			System.out.print("Which player is the AI? ");
-
 			try {
-				aiPlayer = Integer.parseInt(in.nextLine());
-			} catch (final NumberFormatException e) {
-				System.out.println("Please enter a number from 0-" + (numPlayers - 1));
-				tryAgain = true;
-				continue;
-			}
-
-			try {
-				state = new SushiGoState(numPlayers, aiPlayer, in);
+				state = new SushiGoState(numPlayers, in);
 			} catch (final IllegalArgumentException e) {
 				System.out.println(e.getMessage());
 				tryAgain = true;
 			}
 		}
 
+		System.out.println(state);
+
 		// gameplay loop
 		while (state.getWinningPlayers().isEmpty()) {
-			// TODO
+			System.out.println("AI is thinking...");
+			state = (SushiGoState) MCTS.search(state, 3, 1);
+			System.out.println(state);
+			state.getHumanPlayersMoves(in);
 		}
-	}
 
+		in.close();
+
+		System.out.println("Winning players = " + state.getWinningPlayers());
+	}
 }

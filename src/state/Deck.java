@@ -28,4 +28,27 @@ class Deck {
 		this.cards.put("W", 6);
 		this.cards.put("C", 4);
 	}
+
+	/**
+	 * @param card
+	 *            The card to remove from the deck
+	 * @throws IllegalArgumentException
+	 *             If the given card is not in the deck
+	 */
+	void drawCard(final String card) throws IllegalArgumentException {
+		if (!this.cards.containsKey(card)) {
+			throw new IllegalArgumentException("Tried to draw " + card + " from the deck (not present)");
+		}
+
+		this.cards.put(card, this.cards.get(card) - 1);
+
+		if (this.cards.get(card) == 0) {
+			this.cards.remove(card);
+		}
+	}
+
+	@Override
+	public String toString() {
+		return this.cards.toString();
+	}
 }
