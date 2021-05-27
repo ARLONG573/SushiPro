@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 import api.GameState;
+import score.Scoring;
 
 /**
  * This class stores information about the current game state in a way that is
@@ -61,10 +62,37 @@ public class SushiGoState implements GameState {
 	}
 
 	/**
+	 * This method reads and performs the moves that the humans make against the AI.
+	 * 
+	 * @param in
+	 *            The Scanner that this method uses to read the human moves
+	 */
+	public void getHumanPlayersMoves(final Scanner in) {
+		for (int i = 1; i < this.players.length; i++) {
+			String cards = null;
+			boolean tryAgain = true;
+
+			while (tryAgain) {
+				tryAgain = false;
+
+				System.out.print("What did player " + i + " play? ");
+				cards = in.nextLine().toUpperCase();
+
+				try {
+					this.makeMove(cards, i, false, in);
+				} catch (final IllegalArgumentException e) {
+					tryAgain = true;
+				}
+			}
+
+		}
+	}
+
+	/**
 	 * This method makes the current player put down the specified card
 	 * 
-	 * @param cardPlayed
-	 *            The card to play
+	 * @param cardsPlayed
+	 *            The cards to play
 	 * @param player
 	 *            The index of the player playing the card
 	 * @param dealRandomly
@@ -77,19 +105,51 @@ public class SushiGoState implements GameState {
 	 * @throws IllegalArgumentException
 	 *             If the provided card does not match any of the valid cards
 	 */
-	public void makeMove(final String cardPlayed, final int player, final boolean dealRandomly, final Scanner in)
+	private void makeMove(final String cardsPlayed, final int playerIndex, final boolean dealRandomly, final Scanner in)
 			throws IllegalArgumentException {
+		final String[] cards = cardsPlayed.split(" ");
 
+		try {
+			this.players[playerIndex].playCards(cards);
+		} catch (final IllegalArgumentException e) {
+			throw e;
+		}
+
+		// if the round is not over, then we are done
+		if (!this.isRoundOver()) {
+			return;
+		}
+
+		// if the round is over, update the score and prepare the
+		// next round if there is one
+		Scoring.updateScores(this.players, this.currentRound);
+
+		if (this.currentRound < 3) {
+			this.currentRound++;
+
+			for (final Player player : this.players) {
+				player.clearField();
+			}
+
+			if (dealRandomly) {
+				this.dealRandomly();
+			} else {
+				this.dealFromInput(in);
+			}
+		}
 	}
 
 	/**
-	 * This method reads and performs the moves that the humans make against the AI.
-	 * 
-	 * @param in
-	 *            The Scanner that this method uses to read the human moves
+	 * @return Whether or not the current round is over
 	 */
-	public void getHumanPlayersMoves(final Scanner in) {
+	private boolean isRoundOver() {
+		for (final Player player : this.players) {
+			if (!player.isHandEmpty()) {
+				return false;
+			}
+		}
 
+		return true;
 	}
 
 	/**

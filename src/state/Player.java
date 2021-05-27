@@ -11,20 +11,39 @@ import java.util.List;
  * 
  * @author Aaron Tetens
  */
-class Player {
+public class Player {
 
 	private final List<String> hand;
 	private final List<String> field;
 
 	private int score;
-	private int numPuddings;
 
 	Player() {
 		this.hand = new ArrayList<>();
 		this.field = new ArrayList<>();
 
 		this.score = 0;
-		this.numPuddings = 0;
+	}
+
+	/**
+	 * @param score
+	 *            The score to add to the current score
+	 */
+	public void addScore(final int score) {
+		this.score += score;
+	}
+
+	/**
+	 * Remove all cards from the field that are not puddings
+	 */
+	void clearField() {
+		final int numPuddings = this.getNumPuddings();
+
+		this.field.clear();
+
+		for (int i = 0; i < numPuddings; i++) {
+			this.field.add("P");
+		}
 	}
 
 	/**
@@ -35,6 +54,90 @@ class Player {
 		for (int i = 0; i < numUnknownCards; i++) {
 			this.addCardToHand("?");
 		}
+	}
+
+	/**
+	 * Plays the given cards from the player's hand to their field.
+	 * 
+	 * @param cards
+	 *            The cards to play
+	 * @throws IllegalArgumentException
+	 *             If the given set of cards is invalid
+	 */
+	void playCards(final String[] cards) throws IllegalArgumentException {
+		if (cards.length < 1 || cards.length > 2) {
+			throw new IllegalArgumentException("Tried to play " + cards.length + " cards at once (1-2 required)");
+		}
+
+		// if one card, just play it
+		if (cards.length == 1) {
+			try {
+				this.playSingleCard(cards[0]);
+			} catch (final IllegalArgumentException e) {
+				throw e;
+			}
+		} else {
+			// if two cards, it is required that we have chopsticks in our field
+			if (!this.field.contains("C")) {
+				throw new IllegalArgumentException("Tried to play 2 cards without chopsticks in the field");
+			}
+
+			// this is needed to revert the first card placement in case the second one
+			// throws an exception
+			boolean wasFirstCardKnown = this.hand.contains(cards[0]);
+
+			try {
+				this.playSingleCard(cards[0]);
+			} catch (final IllegalArgumentException e) {
+				throw e;
+			}
+
+			try {
+				this.playSingleCard(cards[1]);
+			} catch (final IllegalArgumentException e) {
+				// revert the first card played
+				this.field.remove(cards[0]);
+				this.hand.add(wasFirstCardKnown ? cards[0] : "?");
+
+				throw e;
+			}
+
+			// put chopsticks back in hand
+			this.field.remove("C");
+			this.hand.add("C");
+		}
+	}
+
+	/**
+	 * @param cardToPlay
+	 *            The single card to play
+	 * @throws IllegalArgumentException
+	 *             If the provided card is not validO
+	 */
+	private void playSingleCard(final String cardToPlay) throws IllegalArgumentException {
+		// first check to see if the given card is known to be in our hand
+		for (final String card : this.hand) {
+			if (card.equals(cardToPlay)) {
+				this.hand.remove(cardToPlay);
+				this.field.add(cardToPlay);
+				return;
+			}
+		}
+
+		// next check to see if the given card may be any of the unknown cards
+		// TODO it is possible for the user to put in a card that is not theoretically
+		// possible to play due to all of them being seen already...it is okay for now
+		// as long as the user provides correct inputs
+		for (final String card : this.hand) {
+			if (card.equals("?")) {
+				this.hand.remove(card);
+				this.field.add(cardToPlay);
+				return;
+			}
+		}
+
+		// if both of the above failed, the input was no good
+		throw new IllegalArgumentException("Tried to play " + cardToPlay + " (not a card)");
 	}
 
 	/**
@@ -65,7 +168,15 @@ class Player {
 	 * @return The number of puddings this player has
 	 */
 	int getNumPuddings() {
-		return this.numPuddings;
+		int numPuddings = 0;
+
+		for (final String card : this.field) {
+			if (card.equals("P")) {
+				numPuddings++;
+			}
+		}
+
+		return numPuddings;
 	}
 
 	@Override
