@@ -100,6 +100,25 @@ public class SushiGoState implements GameState {
 	}
 
 	/**
+	 * @param in
+	 *            The Scanner that this method should use to read what cards we
+	 *            received if any were previously unknown
+	 */
+	private void rotateHands(final Scanner in) {
+		for (int i = 1; i < this.players.length; i++) {
+			final List<String> temp = new ArrayList<>(this.players[AI_INDEX].getHand());
+			this.players[AI_INDEX].replaceHand(this.players[i].getHand());
+			this.players[i].replaceHand(temp);
+		}
+
+		while (this.players[AI_INDEX].getHand().contains("?")) {
+			System.out.print("Unknown card: ");
+			final String newCard = in.nextLine().toUpperCase();
+			this.players[AI_INDEX].replaceUnknownCard(newCard);
+		}
+	}
+
+	/**
 	 * This method makes the current player put down the specified card
 	 * 
 	 * @param cardsPlayed
@@ -112,7 +131,9 @@ public class SushiGoState implements GameState {
 	 * @param in
 	 *            The Scanner that this method should use to obtain which cards the
 	 *            AI drew in the event of a deal occurring after the end of the
-	 *            round (this value doesn't matter if dealRandomly is true
+	 *            round (this value doesn't matter if dealRandomly is true), or if
+	 *            the hands get rotated and we receive cards that were previously
+	 *            unknown
 	 * @throws IllegalArgumentException
 	 *             If the provided card does not match any of the valid cards
 	 */
@@ -124,6 +145,21 @@ public class SushiGoState implements GameState {
 			this.players[playerIndex].playCards(cards);
 		} catch (final IllegalArgumentException e) {
 			throw e;
+		}
+
+		// if everyone has played a card, rotate the hands
+		boolean rotateHands = true;
+
+		final int numCardsInHand = this.players[AI_INDEX].getNumCardsInHand();
+		for (int i = 1; i < this.players.length; i++) {
+			if (this.players[i].getNumCardsInHand() > numCardsInHand) {
+				rotateHands = false;
+				break;
+			}
+		}
+
+		if (rotateHands) {
+			this.rotateHands(in);
 		}
 
 		// if the round is not over, then we are done
@@ -252,25 +288,28 @@ public class SushiGoState implements GameState {
 		}
 
 		// two card plays (if we have chopsticks)
+		// the ordering of i and j matter because of wasabi/nigiri orderings
 		if (this.players[AI_INDEX].getField().contains("C")) {
-			for (int i = 0; i < this.players[AI_INDEX].getNumCardsInHand() - 1; i++) {
-				for (int j = i + 1; j < this.players[AI_INDEX].getNumCardsInHand(); j++) {
-					final String card1 = this.players[AI_INDEX].getHand().get(i);
-					final String card2 = this.players[AI_INDEX].getHand().get(j);
+			for (int i = 0; i < this.players[AI_INDEX].getNumCardsInHand(); i++) {
+				for (int j = 0; j < this.players[AI_INDEX].getNumCardsInHand(); j++) {
+					if (i != j) {
+						final String card1 = this.players[AI_INDEX].getHand().get(i);
+						final String card2 = this.players[AI_INDEX].getHand().get(j);
 
-					final SushiGoState nextState = new SushiGoState(this);
+						final SushiGoState nextState = new SushiGoState(this);
 
-					try {
-						// the round can't end in this method, so the values of dealRandomly and in
-						// don't matter
-						nextState.makeMove(card1 + " " + card2, AI_INDEX, false, null);
-					} catch (final IllegalArgumentException e) {
-						System.out.println("Error during next state generation");
-						System.out.println(e.getMessage());
-						System.exit(1);
+						try {
+							// the round can't end in this method, so the values of dealRandomly and in
+							// don't matter
+							nextState.makeMove(card1 + " " + card2, AI_INDEX, true, null);
+						} catch (final IllegalArgumentException e) {
+							System.out.println("Error during next state generation");
+							System.out.println(e.getMessage());
+							System.exit(1);
+						}
+
+						nextStates.add(nextState);
 					}
-
-					nextStates.add(nextState);
 				}
 			}
 		}
@@ -280,8 +319,67 @@ public class SushiGoState implements GameState {
 
 	@Override
 	public GameState getRandomNextState() {
-		// TODO Auto-generated method stub
-		return null;
+		final SushiGoState copy = new SushiGoState(this);
+
+		// if this is the start of the simulation, randomly replace unknown cards with
+		// cards from the deck and make each human player do a random play
+		if (copy.players[AI_INDEX].getNumCardsInHand() < copy.players[AI_INDEX + 1].getNumCardsInHand()) {
+			for (final Player player : copy.players) {
+				while (player.getHand().contains("?")) {
+					player.replaceUnknownCard(copy.deck.drawRandomCard());
+				}
+			}
+
+			for (int i = 1; i < copy.players.length; i++) {
+				copy.doRandomPlay(i);
+			}
+
+			return copy;
+		}
+
+		// if this is not the start of the simulation, make a random move for all
+		// players
+		for (int i = 0; i < copy.players.length; i++) {
+			copy.doRandomPlay(i);
+		}
+
+		return copy;
+	}
+
+	/**
+	 * @param player
+	 *            The player to perform the random move
+	 */
+	private void doRandomPlay(final int player) {
+		final List<String> plays = new ArrayList<>();
+
+		// one card plays
+		plays.addAll(this.players[player].getHand());
+
+		// two card plays (only available if player has chopsticks in their field)
+		// the ordering of i and j matter because of wasabi/nigiri orderings
+		if (this.players[player].getField().contains("C")) {
+			for (int i = 0; i < this.players[player].getNumCardsInHand(); i++) {
+				for (int j = 0; j < this.players[player].getNumCardsInHand(); j++) {
+					if (i != j) {
+						final String card1 = this.players[player].getHand().get(i);
+						final String card2 = this.players[player].getHand().get(j);
+
+						plays.add(card1 + " " + card2);
+					}
+				}
+			}
+		}
+
+		final int randomIndex = (int) (Math.random() * plays.size());
+
+		try {
+			this.makeMove(plays.get(randomIndex), player, true, null);
+		} catch (final IllegalArgumentException e) {
+			System.out.println("Error during simulation");
+			System.out.println(e.getMessage());
+			System.exit(1);
+		}
 	}
 
 	@Override

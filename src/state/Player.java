@@ -68,6 +68,25 @@ public class Player {
 	}
 
 	/**
+	 * @param newHand
+	 *            The hand to replace our hand with
+	 */
+	void replaceHand(final List<String> newHand) {
+		this.hand.clear();
+		this.hand.addAll(newHand);
+	}
+
+	/**
+	 * @param card
+	 *            The card to replace the unknown card with. This method assumes
+	 *            that there is an unknown card to replace and that the given card
+	 *            is valid.
+	 */
+	void replaceUnknownCard(final String card) {
+		this.hand.set(this.hand.indexOf("?"), card);
+	}
+
+	/**
 	 * Plays the given cards from the player's hand to their field.
 	 * 
 	 * @param cards
