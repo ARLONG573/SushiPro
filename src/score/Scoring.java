@@ -37,7 +37,7 @@ public class Scoring {
 			for (final String card : players[i].getField()) {
 				if (card.equals("W")) {
 					numWasabi++;
-				} else if (Pattern.matches("{123}N", card)) {
+				} else if (Pattern.matches("[123]N", card)) {
 					final int nigiriValue = Integer.parseInt(card.substring(0, 1));
 
 					if (numWasabi > 0) {

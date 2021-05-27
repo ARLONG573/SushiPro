@@ -114,6 +114,7 @@ public class SushiGoState implements GameState {
 		while (this.players[AI_INDEX].getHand().contains("?")) {
 			System.out.print("Unknown card: ");
 			final String newCard = in.nextLine().toUpperCase();
+			this.deck.drawCard(newCard);
 			this.players[AI_INDEX].replaceUnknownCard(newCard);
 		}
 	}
@@ -139,10 +140,14 @@ public class SushiGoState implements GameState {
 	 */
 	private void makeMove(final String cardsPlayed, final int playerIndex, final boolean dealRandomly, final Scanner in)
 			throws IllegalArgumentException {
+
 		final String[] cards = cardsPlayed.split(" ");
 
 		try {
-			this.players[playerIndex].playCards(cards);
+			final List<String> cardsToRemoveFromDeck = this.players[playerIndex].playCards(cards);
+			for (final String cardToRemove : cardsToRemoveFromDeck) {
+				this.deck.drawCard(cardToRemove);
+			}
 		} catch (final IllegalArgumentException e) {
 			throw e;
 		}

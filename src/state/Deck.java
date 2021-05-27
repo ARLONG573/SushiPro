@@ -54,7 +54,10 @@ class Deck {
 		}
 
 		final int randomIndex = (int) (Math.random() * cardList.size());
-		return cardList.remove(randomIndex);
+		final String card = cardList.remove(randomIndex);
+
+		this.drawCard(card);
+		return card;
 	}
 
 	/**

@@ -91,21 +91,29 @@ public class Player {
 	 * 
 	 * @param cards
 	 *            The cards to play
+	 * @return The cards that need to be removed from the deck (i.e. the cards that
+	 *         were unknown when they were played
 	 * @throws IllegalArgumentException
 	 *             If the given set of cards is invalid
 	 */
-	void playCards(final String[] cards) throws IllegalArgumentException {
+	List<String> playCards(final String[] cards) throws IllegalArgumentException {
 		if (cards.length < 1 || cards.length > 2) {
 			throw new IllegalArgumentException("Tried to play " + cards.length + " cards at once (1-2 required)");
 		}
 
+		final List<String> cardsToRemoveFromDeck = new ArrayList<>();
+
 		// if one card, just play it
 		if (cards.length == 1) {
 			try {
-				this.playSingleCard(cards[0]);
+				if (this.playSingleCard(cards[0])) {
+					cardsToRemoveFromDeck.add(cards[0]);
+				}
 			} catch (final IllegalArgumentException e) {
 				throw e;
 			}
+
+			return cardsToRemoveFromDeck;
 		} else {
 			// if two cards, it is required that we have chopsticks in our field
 			if (!this.field.contains("C")) {
@@ -117,13 +125,17 @@ public class Player {
 			boolean wasFirstCardKnown = this.hand.contains(cards[0]);
 
 			try {
-				this.playSingleCard(cards[0]);
+				if (this.playSingleCard(cards[0])) {
+					cardsToRemoveFromDeck.add(cards[0]);
+				}
 			} catch (final IllegalArgumentException e) {
 				throw e;
 			}
 
 			try {
-				this.playSingleCard(cards[1]);
+				if (this.playSingleCard(cards[1])) {
+					cardsToRemoveFromDeck.add(cards[1]);
+				}
 			} catch (final IllegalArgumentException e) {
 				// revert the first card played
 				this.field.remove(cards[0]);
@@ -135,22 +147,26 @@ public class Player {
 			// put chopsticks back in hand
 			this.field.remove("C");
 			this.hand.add("C");
+
+			return cardsToRemoveFromDeck;
 		}
 	}
 
 	/**
 	 * @param cardToPlay
 	 *            The single card to play
+	 * @return Whether or not hte given card needs to be removed from the deck (i.e.
+	 *         the card was an unknown when it was played)
 	 * @throws IllegalArgumentException
-	 *             If the provided card is not validO
+	 *             If the provided card is not valid
 	 */
-	private void playSingleCard(final String cardToPlay) throws IllegalArgumentException {
+	private boolean playSingleCard(final String cardToPlay) throws IllegalArgumentException {
 		// first check to see if the given card is known to be in our hand
 		for (final String card : this.hand) {
 			if (card.equals(cardToPlay)) {
 				this.hand.remove(cardToPlay);
 				this.field.add(cardToPlay);
-				return;
+				return false;
 			}
 		}
 
@@ -162,7 +178,7 @@ public class Player {
 			if (card.equals("?")) {
 				this.hand.remove(card);
 				this.field.add(cardToPlay);
-				return;
+				return true;
 			}
 		}
 
@@ -229,7 +245,7 @@ public class Player {
 	public int getNumMaki() {
 		int numMaki = 0;
 		for (final String card : this.field) {
-			if (Pattern.matches("{123}M", card)) {
+			if (Pattern.matches("[123]M", card)) {
 				numMaki += Integer.parseInt(card.substring(0, 1));
 			}
 		}
