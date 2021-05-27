@@ -43,7 +43,7 @@ public class SushiProMain {
 		// gameplay loop
 		while (state.getWinningPlayers().isEmpty()) {
 			System.out.println("AI is thinking...");
-			state = (SushiGoState) MCTS.search(state, 2, 1);
+			state = (SushiGoState) MCTS.search(state, 60, 1);
 			System.out.println(state);
 			state.getHumanPlayersMoves(in);
 			System.out.println(state);
