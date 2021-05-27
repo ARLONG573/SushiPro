@@ -2,6 +2,7 @@ package state;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * This class stores all of the information regarding a single player (hand,
@@ -14,6 +15,9 @@ import java.util.List;
 public class Player {
 
 	private final List<String> hand;
+
+	// the field is kept in the order the cards are played to keep track of
+	// wasabi/nigiri combos
 	private final List<String> field;
 
 	private int score;
@@ -167,7 +171,7 @@ public class Player {
 	/**
 	 * @return The number of puddings this player has
 	 */
-	int getNumPuddings() {
+	public int getNumPuddings() {
 		int numPuddings = 0;
 
 		for (final String card : this.field) {
@@ -177,6 +181,27 @@ public class Player {
 		}
 
 		return numPuddings;
+	}
+
+	/**
+	 * @return The amount of maki in the field
+	 */
+	public int getNumMaki() {
+		int numMaki = 0;
+		for (final String card : this.field) {
+			if (Pattern.matches("{123}M", card)) {
+				numMaki += Integer.parseInt(card.substring(0, 1));
+			}
+		}
+
+		return numMaki;
+	}
+
+	/**
+	 * @return This player's field
+	 */
+	public List<String> getField() {
+		return this.field;
 	}
 
 	@Override
