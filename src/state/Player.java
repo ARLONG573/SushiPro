@@ -29,6 +29,13 @@ public class Player {
 		this.score = 0;
 	}
 
+	Player(final Player player) {
+		this.hand = new ArrayList<>(player.hand);
+		this.field = new ArrayList<>(player.field);
+
+		this.score = player.score;
+	}
+
 	/**
 	 * @param score
 	 *            The score to add to the current score
@@ -152,6 +159,20 @@ public class Player {
 	 */
 	void addCardToHand(final String card) {
 		this.hand.add(card);
+	}
+
+	/**
+	 * @return This player's hand
+	 */
+	List<String> getHand() {
+		return this.hand;
+	}
+
+	/**
+	 * @return The number of cards in this player's hand
+	 */
+	int getNumCardsInHand() {
+		return this.hand.size();
 	}
 
 	/**

@@ -61,6 +61,17 @@ public class SushiGoState implements GameState {
 		this.dealFromInput(in);
 	}
 
+	private SushiGoState(final SushiGoState state) {
+		this.players = new Player[state.players.length];
+		for (int i = 0; i < this.players.length; i++) {
+			this.players[i] = new Player(state.players[i]);
+		}
+
+		this.deck = new Deck(state.deck);
+
+		this.currentRound = state.currentRound;
+	}
+
 	/**
 	 * This method reads and performs the moves that the humans make against the AI.
 	 * 
@@ -196,7 +207,11 @@ public class SushiGoState implements GameState {
 	 * This method deals the cards to the players randomly (used for simulation).
 	 */
 	private void dealRandomly() {
-
+		for (final Player player : this.players) {
+			while (player.getNumCardsInHand() < NUM_CARDS_PER_PLAYER.get(this.players.length)) {
+				player.addCardToHand(this.deck.drawRandomCard());
+			}
+		}
 	}
 
 	@Override
@@ -209,8 +224,58 @@ public class SushiGoState implements GameState {
 
 	@Override
 	public List<GameState> getNextStates() {
-		// TODO Auto-generated method stub
-		return null;
+		final List<GameState> nextStates = new ArrayList<>();
+
+		// we cannot simulate further if we have already played a card since we do not
+		// know what our opponents have played
+		if (this.players[AI_INDEX].getNumCardsInHand() < this.players[AI_INDEX + 1].getNumCardsInHand()) {
+			return nextStates;
+		}
+
+		// generate a state for each possible play
+
+		// one card plays
+		for (final String card : this.players[AI_INDEX].getHand()) {
+			final SushiGoState nextState = new SushiGoState(this);
+
+			try {
+				// the round can't end in this method, so the values of dealRandomly and in
+				// don't matter
+				nextState.makeMove(card, AI_INDEX, false, null);
+			} catch (final IllegalArgumentException e) {
+				System.out.println("Error during next state generation");
+				System.out.println(e.getMessage());
+				System.exit(1);
+			}
+
+			nextStates.add(nextState);
+		}
+
+		// two card plays (if we have chopsticks)
+		if (this.players[AI_INDEX].getField().contains("C")) {
+			for (int i = 0; i < this.players[AI_INDEX].getNumCardsInHand() - 1; i++) {
+				for (int j = i + 1; j < this.players[AI_INDEX].getNumCardsInHand(); j++) {
+					final String card1 = this.players[AI_INDEX].getHand().get(i);
+					final String card2 = this.players[AI_INDEX].getHand().get(j);
+
+					final SushiGoState nextState = new SushiGoState(this);
+
+					try {
+						// the round can't end in this method, so the values of dealRandomly and in
+						// don't matter
+						nextState.makeMove(card1 + " " + card2, AI_INDEX, false, null);
+					} catch (final IllegalArgumentException e) {
+						System.out.println("Error during next state generation");
+						System.out.println(e.getMessage());
+						System.exit(1);
+					}
+
+					nextStates.add(nextState);
+				}
+			}
+		}
+
+		return nextStates;
 	}
 
 	@Override

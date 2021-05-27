@@ -1,6 +1,8 @@
 package state;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,6 +29,32 @@ class Deck {
 		this.cards.put("P", 10);
 		this.cards.put("W", 6);
 		this.cards.put("C", 4);
+	}
+
+	Deck(final Deck deck) {
+		this.cards = new HashMap<>(deck.cards);
+	}
+
+	/**
+	 * This method removes a card from the deck at random and returns the removed
+	 * card.
+	 * 
+	 * @return The randomly drawn card
+	 */
+	String drawRandomCard() {
+		final List<String> cardList = new ArrayList<>();
+
+		for (final Map.Entry<String, Integer> entry : this.cards.entrySet()) {
+			final String card = entry.getKey();
+			final Integer count = entry.getValue();
+
+			for (int i = 0; i < count; i++) {
+				cardList.add(card);
+			}
+		}
+
+		final int randomIndex = (int) (Math.random() * cardList.size());
+		return cardList.remove(randomIndex);
 	}
 
 	/**
