@@ -2,9 +2,11 @@ package state;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 import api.GameState;
 import score.Scoring;
@@ -274,9 +276,15 @@ public class SushiGoState implements GameState {
 		}
 
 		// generate a state for each possible play
+		final Set<String> alreadyProcessed = new HashSet<>();
 
 		// one card plays
 		for (final String card : this.players[AI_INDEX].getHand()) {
+			// skip duplicates
+			if (alreadyProcessed.contains(card)) {
+				continue;
+			}
+
 			final SushiGoState nextState = new SushiGoState(this);
 
 			try {
@@ -290,6 +298,7 @@ public class SushiGoState implements GameState {
 			}
 
 			nextStates.add(nextState);
+			alreadyProcessed.add(card);
 		}
 
 		// two card plays (if we have chopsticks)
@@ -300,13 +309,19 @@ public class SushiGoState implements GameState {
 					if (i != j) {
 						final String card1 = this.players[AI_INDEX].getHand().get(i);
 						final String card2 = this.players[AI_INDEX].getHand().get(j);
+						final String play = card1 + " " + card2;
+
+						// skip duplicates
+						if (alreadyProcessed.contains(play)) {
+							continue;
+						}
 
 						final SushiGoState nextState = new SushiGoState(this);
 
 						try {
 							// the round can't end in this method, so the values of dealRandomly and in
 							// don't matter
-							nextState.makeMove(card1 + " " + card2, AI_INDEX, true, null);
+							nextState.makeMove(play, AI_INDEX, true, null);
 						} catch (final IllegalArgumentException e) {
 							System.out.println("Error during next state generation");
 							System.out.println(e.getMessage());
@@ -314,6 +329,7 @@ public class SushiGoState implements GameState {
 						}
 
 						nextStates.add(nextState);
+						alreadyProcessed.add(play);
 					}
 				}
 			}

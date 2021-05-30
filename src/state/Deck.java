@@ -1,8 +1,6 @@
 package state;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,22 +40,30 @@ class Deck {
 	 * @return The randomly drawn card
 	 */
 	String drawRandomCard() {
-		final List<String> cardList = new ArrayList<>();
+		int numCards = 0;
+		for (final Integer count : this.cards.values()) {
+			numCards += count;
+		}
+
+		final int chosen = ((int) (Math.random() * numCards)) + 1;
+		int current = 0;
+		String card = null;
 
 		for (final Map.Entry<String, Integer> entry : this.cards.entrySet()) {
-			final String card = entry.getKey();
-			final Integer count = entry.getValue();
+			final String entryCard = entry.getKey();
+			final Integer entryCount = entry.getValue();
 
-			for (int i = 0; i < count; i++) {
-				cardList.add(card);
+			card = entryCard;
+			current += entryCount;
+
+			if (current >= chosen) {
+				this.drawCard(card);
+				return card;
 			}
 		}
 
-		final int randomIndex = (int) (Math.random() * cardList.size());
-		final String card = cardList.remove(randomIndex);
-
-		this.drawCard(card);
-		return card;
+		// should never reach here
+		return null;
 	}
 
 	/**
