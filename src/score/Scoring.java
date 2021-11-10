@@ -137,8 +137,11 @@ public class Scoring {
 				player.addScore(6 / mostPuddingsPlayers.size());
 			}
 
-			for (final Player player : leastPuddingsPlayers) {
-				player.addScore(-6 / leastPuddingsPlayers.size());
+			// Only lose points for least pudding if more than 2 players
+			if (players.length > 2) {
+				for (final Player player : leastPuddingsPlayers) {
+					player.addScore(-6 / leastPuddingsPlayers.size());
+				}
 			}
 		}
 	}
